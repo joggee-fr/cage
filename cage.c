@@ -29,6 +29,7 @@
 #include <wlr/types/wlr_idle_inhibit_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_output_management_v1.h>
+#include <wlr/types/wlr_output_power_management_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_screencopy_v1.h>
@@ -493,6 +494,10 @@ main(int argc, char *argv[])
 	wl_signal_add(&server.output_manager_v1->events.apply, &server.output_manager_apply);
 	server.output_manager_test.notify = handle_output_manager_test;
 	wl_signal_add(&server.output_manager_v1->events.test, &server.output_manager_test);
+
+	server.output_power_manager_v1 = wlr_output_power_manager_v1_create(server.wl_display);
+	server.output_power_manager_set_mode.notify = handle_output_power_manager_set_mode;
+	wl_signal_add(&server.output_power_manager_v1->events.set_mode, &server.output_power_manager_set_mode);
 
 	gamma_control_manager = wlr_gamma_control_manager_v1_create(server.wl_display);
 	if (!gamma_control_manager) {
