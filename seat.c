@@ -22,6 +22,7 @@
 #include <wlr/types/wlr_idle.h>
 #include <wlr/types/wlr_keyboard_group.h>
 #include <wlr/types/wlr_primary_selection.h>
+#include <wlr/types/wlr_relative_pointer_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_touch.h>
@@ -607,11 +608,17 @@ handle_cursor_button(struct wl_listener *listener, void *data)
 }
 
 static void
-process_cursor_motion(struct cg_seat *seat, uint32_t time)
+process_cursor_motion(struct cg_seat *seat, uint32_t time, double dx, double dy, double dx_unaccel, double dy_unaccel)
 {
 	double sx, sy;
 	struct wlr_seat *wlr_seat = seat->seat;
 	struct wlr_surface *surface = NULL;
+
+	if (dx != 0 || dy != 0) {
+		wlr_relative_pointer_manager_v1_send_relative_motion(seat->server->relative_pointer_manager,
+			seat->seat, (uint64_t)time * 1000,
+			dx, dy, dx_unaccel, dy_unaccel);
+	}
 
 	struct cg_view *view = desktop_view_at(seat->server, seat->cursor->x, seat->cursor->y, &surface, &sx, &sy);
 
@@ -637,8 +644,14 @@ handle_cursor_motion_absolute(struct wl_listener *listener, void *data)
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_motion_absolute);
 	struct wlr_pointer_motion_absolute_event *event = data;
 
+	double lx, ly;
+	wlr_cursor_absolute_to_layout_coords(seat->cursor, &event->pointer->base, event->x, event->y, &lx, &ly);
+
+	double dx = lx - seat->cursor->x;
+	double dy = ly - seat->cursor->y;
+
 	wlr_cursor_warp_absolute(seat->cursor, &event->pointer->base, event->x, event->y);
-	process_cursor_motion(seat, event->time_msec);
+	process_cursor_motion(seat, event->time_msec, dx, dy ,dx, dy);
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
 }
 
@@ -649,7 +662,7 @@ handle_cursor_motion(struct wl_listener *listener, void *data)
 	struct wlr_pointer_motion_event *event = data;
 
 	wlr_cursor_move(seat->cursor, &event->pointer->base, event->delta_x, event->delta_y);
-	process_cursor_motion(seat, event->time_msec);
+	process_cursor_motion(seat, event->time_msec, event->delta_x, event->delta_y, event->unaccel_dx, event->unaccel_dy);
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
 }
 
@@ -942,5 +955,5 @@ seat_set_focus(struct cg_seat *seat, struct cg_view *view)
 		wlr_seat_keyboard_notify_enter(wlr_seat, view->wlr_surface, NULL, 0, NULL);
 	}
 
-	process_cursor_motion(seat, -1);
+	process_cursor_motion(seat, -1, 0, 0, 0, 0);
 }

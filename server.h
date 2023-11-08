@@ -54,6 +54,8 @@ struct cg_server {
 	struct wl_listener output_manager_apply;
 	struct wl_listener output_manager_test;
 
+	struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
+
 	const char *socket;
 	bool xdg_decoration;
 	bool allow_vt_switch;
