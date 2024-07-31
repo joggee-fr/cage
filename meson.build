@@ -35,6 +35,7 @@ if is_freebsd
   )
 endif
 
+scfg           = dependency('scfg', fallback: 'libscfg')
 wlroots        = dependency('wlroots', version: '>= 0.17.0', fallback: ['wlroots', 'wlroots'])
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 wayland_server = dependency('wayland-server')
@@ -112,6 +113,7 @@ endif
 
 cage_sources = [
   'cage.c',
+  'cfg.c',
   'idle_inhibit_v1.c',
   'output.c',
   'seat.c',
@@ -140,6 +142,7 @@ executable(
   meson.project_name(),
   cage_sources + cage_headers,
   dependencies: [
+    scfg,
     server_protos,
     wayland_server,
     wlroots,

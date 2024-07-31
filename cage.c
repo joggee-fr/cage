@@ -51,6 +51,7 @@
 #include <wlr/xwayland.h>
 #endif
 
+#include "cfg.h"
 #include "idle_inhibit_v1.h"
 #include "output.h"
 #include "seat.h"
@@ -269,6 +270,9 @@ main(int argc, char *argv[])
 	if (!parse_args(&server, argc, argv)) {
 		return 1;
 	}
+
+	parse_config_file("../test.cfg", &server);
+	exit(0);
 
 #ifdef DEBUG
 	wlr_log_init(WLR_DEBUG, NULL);
