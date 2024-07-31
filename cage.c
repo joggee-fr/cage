@@ -162,27 +162,17 @@ cleanup_primary_client(pid_t pid)
 }
 
 static bool
-drop_permissions(void)
+detect_suid(void)
 {
-	if (getuid() == 0 || getgid() == 0) {
-		wlr_log(WLR_INFO, "Running as root user, this is dangerous");
-		return true;
-	}
-	if (getuid() != geteuid() || getgid() != getegid()) {
-		wlr_log(WLR_INFO, "setuid/setgid bit detected, dropping permissions");
-		// Set the gid and uid in the correct order.
-		if (setgid(getgid()) != 0 || setuid(getuid()) != 0) {
-			wlr_log(WLR_ERROR, "Unable to drop root, refusing to start");
-			return false;
-		}
-	}
-
-	if (setgid(0) != -1 || setuid(0) != -1) {
-		wlr_log(WLR_ERROR,
-			"Unable to drop root (we shouldn't be able to restore it after setuid), refusing to start");
+	if (geteuid() != 0 && getegid() != 0) {
 		return false;
 	}
 
+	if (getuid() == geteuid() && getgid() == getegid()) {
+		return false;
+	}
+
+	wlr_log(WLR_ERROR, "SUID operation is no longer supported, refusing to start");
 	return true;
 }
 
@@ -276,6 +266,11 @@ main(int argc, char *argv[])
 	wlr_log_init(WLR_ERROR, NULL);
 #endif
 
+	/* SUID operation is deprecated, so block it for now. */
+	if (detect_suid()) {
+		return 1;
+	}
+
 	/* Wayland requires XDG_RUNTIME_DIR to be set. */
 	if (!getenv("XDG_RUNTIME_DIR")) {
 		wlr_log(WLR_ERROR, "XDG_RUNTIME_DIR is not set in the environment");
@@ -297,11 +292,6 @@ main(int argc, char *argv[])
 	server.backend = wlr_backend_autocreate(server.wl_display, &server.session);
 	if (!server.backend) {
 		wlr_log(WLR_ERROR, "Unable to create the wlroots backend");
-		ret = 1;
-		goto end;
-	}
-
-	if (!drop_permissions()) {
 		ret = 1;
 		goto end;
 	}
