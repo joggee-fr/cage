@@ -115,6 +115,7 @@ cage_sources = [
   'idle_inhibit_v1.c',
   'output.c',
   'seat.c',
+  'server.c',
   'view.c',
   'xdg_shell.c',
 ]

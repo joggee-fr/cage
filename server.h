@@ -48,18 +48,26 @@ struct cg_server {
 
 	struct wl_listener new_virtual_keyboard;
 	struct wl_listener new_virtual_pointer;
-#if CAGE_HAS_XWAYLAND
-	struct wl_listener new_xwayland_surface;
-#endif
 	struct wlr_output_manager_v1 *output_manager_v1;
 	struct wl_listener output_manager_apply;
 	struct wl_listener output_manager_test;
 
 	struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
 
+#if CAGE_HAS_XWAYLAND
+	struct wlr_xwayland *xwayland;
+	struct wlr_xcursor_manager *xcursor_manager;
+	struct wl_listener new_xwayland_surface;
+#endif
+
+	const char *socket;
+
 	bool xdg_decoration;
 	bool allow_vt_switch;
 	bool return_app_code;
 };
+
+bool server_init(struct cg_server *server);
+void server_term(struct cg_server *server);
 
 #endif
