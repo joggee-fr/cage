@@ -209,27 +209,10 @@ handle_xdg_shell_surface_unmap(struct wl_listener *listener, void *data)
 }
 
 static void
-handle_xdg_shell_surface_commit(struct wl_listener *listener, void *data)
-{
-	struct cg_xdg_shell_view *xdg_shell_view = wl_container_of(listener, xdg_shell_view, commit);
-	struct cg_view *view = &xdg_shell_view->view;
-
-	// Check if view dimensions have changed
-	struct wlr_box view_box;
-	get_geometry(view, &view_box);
-	if (view_box.width != view->width || view_box.height != view->height) {
-		view_position(view);
-	}
-}
-
-static void
 handle_xdg_shell_surface_map(struct wl_listener *listener, void *data)
 {
 	struct cg_xdg_shell_view *xdg_shell_view = wl_container_of(listener, xdg_shell_view, map);
 	struct cg_view *view = &xdg_shell_view->view;
-
-	xdg_shell_view->commit.notify = handle_xdg_shell_surface_commit;
-	wl_signal_add(&xdg_shell_view->xdg_toplevel->base->surface->events.commit, &xdg_shell_view->commit);
 
 	view_map(view, xdg_shell_view->xdg_toplevel->base->surface);
 }
@@ -238,14 +221,21 @@ static void
 handle_xdg_shell_surface_commit(struct wl_listener *listener, void *data)
 {
 	struct cg_xdg_shell_view *xdg_shell_view = wl_container_of(listener, xdg_shell_view, commit);
+	struct cg_view *view = &xdg_shell_view->view;
 
 	if (!xdg_shell_view->xdg_toplevel->base->initial_commit) {
-		return;
+		// Check if view dimensions have changed
+		struct wlr_box view_box;
+
+		get_geometry(view, &view_box);
+		if (view_box.width == view->width && view_box.height == view->height) {
+			return;
+		}
 	}
 
 	/* When an xdg_surface performs an initial commit, the compositor must
 	 * reply with a configure so the client can map the surface. */
-	view_position(&xdg_shell_view->view);
+	view_position(view);
 }
 
 static void

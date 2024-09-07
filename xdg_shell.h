@@ -16,7 +16,6 @@ struct cg_xdg_shell_view {
 	struct wl_listener unmap;
 	struct wl_listener map;
 	struct wl_listener request_fullscreen;
-	struct wl_listener commit;
 };
 
 struct cg_xdg_decoration {

@@ -75,7 +75,9 @@ view_position(struct cg_view *view)
 	view->width = view_box.width;
 	view->height = view_box.height;
 
-	wlr_scene_node_set_position(&view->scene_tree->node, view->lx, view->ly);
+	if (view->scene_tree) {
+		wlr_scene_node_set_position(&view->scene_tree->node, view->lx, view->ly);
+	}
 
 	if (view_is_primary(view) || view_extends_output_layout(view, &layout_box)) {
 		view->impl->maximize(view, layout_box.width, layout_box.height);
