@@ -231,6 +231,7 @@ usage(FILE *file, const char *cage)
 		" -h\t Display this help message\n"
 		" -m extend Extend the display across all connected outputs (default)\n"
 		" -m last Use only the last connected output\n"
+		" -m none Do not automatically enable outputs\n"
 		" -s\t Allow VT switching\n"
 		" -v\t Show the version number and exit\n"
 		"\n"
@@ -256,6 +257,8 @@ parse_args(struct cg_server *server, int argc, char *argv[])
 		case 'm':
 			if (strcmp(optarg, "last") == 0) {
 				server->output_mode = CAGE_MULTI_OUTPUT_MODE_LAST;
+			} else if (strcmp(optarg, "none") == 0) {
+				server->output_mode = CAGE_MULTI_OUTPUT_MODE_NONE;
 			} else if (strcmp(optarg, "extend") == 0) {
 				server->output_mode = CAGE_MULTI_OUTPUT_MODE_EXTEND;
 			}

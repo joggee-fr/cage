@@ -293,44 +293,47 @@ handle_new_output(struct wl_listener *listener, void *data)
 		return;
 	}
 
-	struct wlr_output_state state = {0};
-	wlr_output_state_set_enabled(&state, true);
-	if (!wl_list_empty(&wlr_output->modes)) {
-		struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode(wlr_output);
-		if (preferred_mode) {
-			wlr_output_state_set_mode(&state, preferred_mode);
-		}
-		if (!wlr_output_test_state(wlr_output, &state)) {
-			struct wlr_output_mode *mode;
-			wl_list_for_each (mode, &wlr_output->modes, link) {
-				if (mode == preferred_mode) {
-					continue;
-				}
-
-				wlr_output_state_set_mode(&state, mode);
-				if (wlr_output_test_state(wlr_output, &state)) {
-					break;
-				}
-			}
-		}
-	}
-
-	if (server->output_mode == CAGE_MULTI_OUTPUT_MODE_LAST && wl_list_length(&server->outputs) > 1) {
-		struct cg_output *next = wl_container_of(output->link.next, next, link);
-		output_disable(next);
-	}
-
 	if (!wlr_xcursor_manager_load(server->seat->xcursor_manager, wlr_output->scale)) {
 		wlr_log(WLR_ERROR, "Cannot load XCursor theme for output '%s' with scale %f", wlr_output->name,
 			wlr_output->scale);
 	}
 
-	wlr_log(WLR_DEBUG, "Enabling new output %s", wlr_output->name);
-	if (wlr_output_commit_state(wlr_output, &state)) {
-		output_layout_add_auto(output);
+	if (server->output_mode != CAGE_MULTI_OUTPUT_MODE_NONE) {
+		struct wlr_output_state state = {0};
+		wlr_output_state_set_enabled(&state, true);
+		if (!wl_list_empty(&wlr_output->modes)) {
+			struct wlr_output_mode *preferred_mode = wlr_output_preferred_mode(wlr_output);
+			if (preferred_mode) {
+				wlr_output_state_set_mode(&state, preferred_mode);
+			}
+			if (!wlr_output_test_state(wlr_output, &state)) {
+				struct wlr_output_mode *mode;
+				wl_list_for_each (mode, &wlr_output->modes, link) {
+					if (mode == preferred_mode) {
+						continue;
+					}
+
+					wlr_output_state_set_mode(&state, mode);
+					if (wlr_output_test_state(wlr_output, &state)) {
+						break;
+					}
+				}
+			}
+		}
+
+		if (server->output_mode == CAGE_MULTI_OUTPUT_MODE_LAST && wl_list_length(&server->outputs) > 1) {
+			struct cg_output *next = wl_container_of(output->link.next, next, link);
+			output_disable(next);
+		}
+
+		wlr_log(WLR_DEBUG, "Enabling new output %s", wlr_output->name);
+		if (wlr_output_commit_state(wlr_output, &state)) {
+			output_layout_add_auto(output);
+		}
+
+		view_position_all(output->server);
 	}
 
-	view_position_all(output->server);
 	update_output_manager_config(output->server);
 }
 
