@@ -51,6 +51,7 @@
 #include <wlr/xwayland.h>
 #endif
 
+#include "cfg.h"
 #include "idle_inhibit_v1.h"
 #include "output.h"
 #include "seat.h"
@@ -292,6 +293,8 @@ main(int argc, char *argv[])
 	}
 
 	wlr_log_init(server.log_level, NULL);
+	parse_config_file("../test.cfg", &server);
+	//exit(0);
 
 	/* Wayland requires XDG_RUNTIME_DIR to be set. */
 	if (!getenv("XDG_RUNTIME_DIR")) {
